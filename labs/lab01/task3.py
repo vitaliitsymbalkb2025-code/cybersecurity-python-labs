@@ -1,4 +1,3 @@
-
 import csv
 import hashlib
 import json
@@ -12,6 +11,7 @@ from shared.student import VARIANT_NUMBER
 
 MIN_PASSWORD_LENGTH = 13
 HASH_ALGORITHM = "sha224"
+# Варіант записується як п'ять цифр, тому для 9 отримуємо 00009.
 SALT = f"{VARIANT_NUMBER:05d}"
 DATA_DIR = Path(__file__).parent / "data"
 USERS_FILE = DATA_DIR / "users.csv"
@@ -42,7 +42,9 @@ def generate_hash(password: str, salt: str = "00000") -> str:
         raise ValidationError(
             f"Пароль має містити щонайменше {MIN_PASSWORD_LENGTH} символів"
         )
-    return hashlib.new(HASH_ALGORITHM, f"{password}{salt}".encode()).hexdigest()
+    # Пароль не зберігаємо, у файл потрапляє тільки його хеш.
+    value = f"{password}{salt}".encode()
+    return hashlib.new(HASH_ALGORITHM, value).hexdigest()
 
 
 def create_user(username: str, password: str) -> tuple[str, str]:
@@ -57,6 +59,7 @@ def create_users(users_list: tuple[tuple[str, str], ...]) -> list[tuple[str, str
     DATA_DIR.mkdir(parents=True, exist_ok=True)
     users_db = [create_user(username, password) for username, password in users_list]
     try:
+        # newline="" потрібен, щоб CSV не отримував зайві порожні рядки.
         with USERS_FILE.open("w", newline="", encoding="utf-8") as file:
             writer = csv.writer(file)
             writer.writerows(users_db)
@@ -84,6 +87,7 @@ def log_event(function: Callable[..., Any]) -> Callable[..., Any]:
         username = kwargs.get("username", args[0] if args else "")
         result = "failure"
         try:
+            # Якщо login повернув False, спроба теж вважається невдалою.
             response = function(*args, **kwargs)
             result = "success" if response else "failure"
             return response
@@ -98,6 +102,7 @@ def log_event(function: Callable[..., Any]) -> Callable[..., Any]:
             }
             DATA_DIR.mkdir(parents=True, exist_ok=True)
             try:
+                # Журнал зберігаємо як список подій, щоб не затирати старі записи.
                 events = []
                 if LOG_FILE.exists():
                     with LOG_FILE.open(encoding="utf-8") as file:

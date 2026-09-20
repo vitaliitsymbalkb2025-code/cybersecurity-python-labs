@@ -1,4 +1,3 @@
-
 import random
 import string
 
@@ -27,9 +26,11 @@ FORBIDDEN_PASSWORDS = {"plain", "member", "regular", "ordinary", "usual", "user"
 
 def classify_password(password: str, all_passwords: list[str]) -> str:
     """Повертає категорію надійності пароля."""
+    # Спочатку відсіюємо заборонені та занадто короткі паролі.
     if password in FORBIDDEN_PASSWORDS or len(password) < CRITERIA["min_length"]:
         return "Заборонений"
 
+    # Окремо перевіряємо наявність цифр, великих літер і спецсимволів.
     checks = [
         not CRITERIA["require_digits"] or any(char.isdigit() for char in password),
         not CRITERIA["require_upper"] or any(char.isupper() for char in password),
@@ -52,6 +53,7 @@ def classify_password(password: str, all_passwords: list[str]) -> str:
 def analyze_passwords() -> list[tuple[int, str, str]]:
     """Додає три випадкові дублікати та класифікує всі паролі."""
     passwords = PASSWORDS.copy()
+    # Дублікати імітують повторне використання паролів користувачами.
     duplicate_indexes = random.sample(range(len(PASSWORDS)), 3)
     passwords.extend(PASSWORDS[index] for index in duplicate_indexes)
     return [

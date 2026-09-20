@@ -1,7 +1,7 @@
-
 from shared.student import VARIANT_NUMBER
 
 USERS = {
+    # clearance визначає максимальний рівень ресурсу для користувача.
     "cloud_architect": {
         "role": "cloud_security",
         "clearance": 4,
@@ -51,6 +51,8 @@ BLOCKED_USERS = {"migrated_user", "container_breach", "pipeline_compromise"}
 
 def check_access(username: str, resource_level: int) -> tuple[str, str]:
     """Перевіряє доступ користувача до ресурсу."""
+    # Порядок перевірок важливий: заблокований користувач не має доступу
+    # навіть тоді, коли його рівень допуску достатній.
     if username not in USERS:
         return "DENY", "User not found"
     if username in BLOCKED_USERS:
@@ -69,6 +71,7 @@ def print_access_report() -> None:
     print(f"\nЗавдання 2 | Варіант {VARIANT_NUMBER}")
     print("Ресурси:")
     for resource_name, level in RESOURCES:
+        # Нумерація рівнів починається з 1, а індексація кортежу з 0.
         print(f"- {resource_name}: {SECURITY_LEVELS[level - 1]} ({level})")
 
     print("\nПеревірки доступу:")
